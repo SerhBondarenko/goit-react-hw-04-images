@@ -1,47 +1,38 @@
-import { Component } from 'react';
-import { ImSearch } from 'react-icons/im';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import PropTypes from 'prop-types';
-import s from '../Searchbar/Searchbar.module.css';
+import { useState} from "react";
+import { ImSearch } from "react-icons/im";
+import {toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import PropTypes from "prop-types";
+import s from "../Searchbar/Searchbar.module.css";
 
-export default class Searchbar extends Component {
-  state = {
-    imageName: '',
-  };
+  export default function Searchbar({onSubmit}) {
+  
+  const [imageName, setImageName] = useState("");
 
-  static propTypes = {
-    webformatURL: PropTypes.func
-  };
   //записывает в стейт данные с инпута при каждом клике
-  handleNameChange = event => {
-    this.setState({
-      imageName: event.currentTarget.value.toLowerCase().trim(),
-    });
+  const handleNameChange = (event) => {
+    setImageName(event.currentTarget.value.toLowerCase().trim());
   };
   //записывает данные с формы в стейт при сабмите
   //передает данные в App
-  handleSubmit = event => {
+  const handleSubmit = (event) => {
     event.preventDefault();
-
-    if (this.state.imageName.trim() === '') {
-      return toast.error('Введите название изображения');
+    if (imageName.trim() === "") {
+      return toast.error("Введите название изображения");
     }
-
-    this.props.onSubmit(this.state.imageName);
-    this.setState({ imageName: '' });
+    onSubmit(imageName);
+    setImageName('');
   };
 
-  render() {
     return (
       <header className={s.Searchbar}>
-        <form className={s.SearchForm} onSubmit={this.handleSubmit}>
+        <form className={s.SearchForm} onSubmit={handleSubmit}>
           <input
             className={s.SearchFormInput}
             type="text"
             autoComplete="off"
-            value={this.state.imageName}
-            onChange={this.handleNameChange}
+            value={imageName}
+            onChange={handleNameChange}
             autoFocus
             placeholder="Search images and photos"
           />
@@ -52,5 +43,8 @@ export default class Searchbar extends Component {
         </form>
       </header>
     );
-  }
 };
+
+ Searchbar.propTypes = {
+   onSubmit: PropTypes.func,
+ };

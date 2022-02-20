@@ -1,72 +1,83 @@
-import { Component } from 'react';
-import './styles.css';
-import Searchbar from '../components/Searchbar/Searchbar'
-import { ToastContainer, toast } from 'react-toastify';
-import ImageGallery from './ImageGallery/ImageGallery';
-import imageFinderAPI from './servises/image-finder-api';
-import Button from './Button/Button';
-import Loader from './Loader/Loader';
-import Modal from './Modal/Modal';
+import { useState, useEffect } from "react";
+import "./styles.css";
+import Searchbar from "../components/Searchbar/Searchbar";
+import {ToastContainer} from "react-toastify";
+import ImageGallery from "./ImageGallery/ImageGallery";
+import imageFinderAPI from "./servises/image-finder-api";
+import Button from "./Button/Button";
+import Loader from "./Loader/Loader";
+import Modal from "./Modal/Modal";
 
+export default function App() {
+  const [images, setImages] = useState([]);
+  const [data, setData] = useState([]);
+  const [imageName, setImageName] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState("null");
+  const [status, setStatus] = useState("idle");
+  const [page, setPage] = useState(1);
+  const [largeImageURL, setLargeImageURL] = useState("");
+  const [activeImgUrl, setActiveImgUrl] = useState("");
 
-export default class App extends Component {
-  state = {
-    images: [],
-    loading: false,
-    imageName: '',
-    showModal: false,
-    error: null,
-    status: 'idle',
-    page: 1,
-    largeImageURL: {},
-  };
+  useEffect(() => {
+    if (!imageName) {
+      return;
+    }
+    setStatus("pending");
+    fetchQuery();
+  }, [imageName]);
 
-  fetchQuery = () => {
-    const { imageName, page } = this.state;
+  const fetchQuery = () => {
     imageFinderAPI
       .fetchImage(imageName, page)
-      .then(data => {
-        this.setState(prevState => ({
-          images: [...prevState.images, ...data.hits],
-          page: prevState.page + 1,
-          status: 'resolved',
-          data,
-        }))
-      }).catch(error => this.setState({ error, status: 'rejected' }))
-  };
-  
-  componentDidUpdate(prevProps, prevState) {
-  
-   if (prevState.imageName !== this.state.imageName) {
-   this.setState({ images: [] });
-     this.fetchQuery(this.state.imageName, this.state.page)
-   } 
+      .then((data) => {
+        setData(data);
+        setImages([...images, ...data.hits]);
+        setPage(page + 1);
+        setStatus("resolved");
+      })
+      .catch((error) => {
+        setError(error);
+        setStatus("rejected");
+      });
   };
 
-// принимает данные с формы 
-  handleFormSubmit = imageName => {
-    this.setState({ imageName,page:1  });
+  const handleFormSubmit = (imageName) => {
+    setImageName(imageName);
+    setPage(1);
   };
-   openModal = (imageUrl) => {
-    this.setState({ showModal: true, largeImageURL: imageUrl});
+
+  const openModal = (imageUrl) => {
+    setShowModal(true);
+    setLargeImageURL(imageUrl);
   };
- closeModal = () => {
-    this.setState({ showModal: false, activeImgUrl: "" });
+  const closeModal = () => {
+    setShowModal(false);
+    setActiveImgUrl("");
   };
-  render() {
-    const { images, status, error, data,showModal,largeImageURL} = this.state;
-    return (
-      
-      <div className='App'><Searchbar onSubmit={this.handleFormSubmit} />
-        <ToastContainer autoClose={2000} />
-        {status === 'idle' && <h2 className='title'>Введите имя запроса</h2>}
-        {status === 'pending' && <Loader />}
-        {status === 'rejected' && <h1>{error.message}</h1>}
-        {status === 'resolved' && <main> <ImageGallery images={images} toggleModal={this.openModal} showModal={showModal }/> {images.length !== data.totalHits && <div className='LoadMoreBtn'><Button onClickBtn={this.fetchQuery} /> </div>}</main>}
-     {showModal && (
-          <Modal onClose={this.closeModal}>
-           <img src={largeImageURL} alt="images"></img>;</Modal>
+
+  return (
+    <div className="App">
+      <Searchbar onSubmit={handleFormSubmit} />
+      <ToastContainer autoClose={2000} />
+      {status === "idle" && <h2 className="title">Введите имя запроса</h2>}
+      {status === "pending" && <Loader />}
+      {status === "rejected" && <h1>{error.message}</h1>}
+      {status === "resolved" && (
+        <main>
+          <ImageGallery images={images} toggleModal={openModal} showModal={showModal} />
+          {images.length !== data.totalHits && (
+            <div className="LoadMoreBtn">
+              <Button onClickBtn={fetchQuery} />
+            </div>
+          )}
+        </main>
       )}
-    </div>)
-  };
-};
+      {showModal && (
+        <Modal onClose={closeModal}>
+          <img src={largeImageURL} alt="images"></img>;
+        </Modal>
+      )}
+    </div>
+  );
+}

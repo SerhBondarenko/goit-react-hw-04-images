@@ -5,7 +5,7 @@ import s from '../ImageGallery/ImageGallery.module.css';
 
 export default function ImageGallery({ images, toggleModal }) {
   return (
-    <ul className={s.ImageGallery}>
+    <ul className={s.ImageGallery} id="imageGallery">
       {images.map((item) => (
         <ImageGalleryItem
           key={item.id}
